@@ -1,0 +1,10 @@
+{
+  "description": "Track and visualize your developer learning journey with personalized roadmaps, daily logs, progress charts, and collaborative accountability features.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

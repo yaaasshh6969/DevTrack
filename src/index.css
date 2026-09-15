@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #060610;
+  --color-sidebar: #08081c;
+  --color-surface: #0b0b20;
+  --color-surface-2: #101030;
+  --color-border: rgba(100, 70, 200, 0.09);
+  --color-border-hi: rgba(139, 71, 243, 0.2);
+  --color-accent: #8b47f3;
+  --color-accent-dim: rgba(139, 71, 243, 0.1);
+  --color-crimson: #cc1144;
+  --color-crimson-dim: rgba(204, 34, 85, 0.1);
+  --color-wine: #8b1040;
+  --color-pink: #cc1144;
+  --color-pink-dim: rgba(204, 34, 85, 0.08);
+  --color-neon: #a855f7;
+  --color-text: #f0ecff;
+  --color-muted: #6868a8;
+  --color-faint: #383868;
+  --color-success: #4dd0a1;
+  --color-warn: #fbbf24;
+  --color-danger: #f87171;
+  --color-xp: #fbbf24;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: #060610;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #f0ecff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 71, 243, 0.1) transparent;
+}
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(139, 71, 243, 0.1); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(139, 71, 243, 0.2); }
+
+/* ── Card base ── */
+.card {
+  background: #0b0b20;
+  border: 1px solid rgba(100, 70, 200, 0.09);
+  border-radius: 10px;
+}
+
+.card-hover {
+  transition: border-color 0.15s;
+}
+.card-hover:hover {
+  border-color: rgba(139, 71, 243, 0.2);
+}
+
+/* ── Input focus ring ── */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(139, 71, 243, 0.5) !important;
+}
+
+/* ── Heatmap cell hover ── */
+.heatmap-cell:hover {
+  opacity: 0.8;
+  outline: 1px solid rgba(168, 85, 247, 0.4);
+  outline-offset: 1px;
+}
+
+/* ── Atmospheric particles (replaces sakura) ── */
+@keyframes sakura-drift {
+  0%   { transform: translateY(-12px) translateX(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.35; }
+  90%  { opacity: 0.06; }
+  100% { transform: translateY(105vh) translateX(var(--petal-drift, 40px)) rotate(var(--petal-spin, 360deg)); opacity: 0; }
+}
+
+.sakura-petal {
+  position: fixed;
+  background: rgba(204, 34, 85, 0.28);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sakura-drift linear infinite;
+  z-index: 1;
+}
+
+/* Alternate violet particles */
+.sakura-petal:nth-child(odd) {
+  background: rgba(139, 71, 243, 0.22);
+}
+
+/* ── XP bar gradient ── */
+.xp-bar-fill {
+  background: linear-gradient(90deg, #6418c8 0%, #8b47f3 55%, #cc1144 100%);
+}
+
+/* ── Companion card gradient bg ── */
+.companion-bg {
+  background: radial-gradient(ellipse at 75% 45%, rgba(139, 71, 243, 0.07) 0%, transparent 55%),
+              radial-gradient(ellipse at 28% 82%, rgba(204, 34, 85, 0.05) 0%, transparent 52%),
+              #0b0b20;
+}
+
+/* ── Japanese decorative text ── */
+.jp-watermark {
+  font-family: 'JetBrains Mono', monospace;
+  writing-mode: horizontal-tb;
+  letter-spacing: 0.05em;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Logo glow ── */
+.accent-glow {
+  box-shadow: 0 0 10px rgba(139, 71, 243, 0.14);
+}
+
+/* ── Chat bubble ── */
+.chat-bubble-hana {
+  background: rgba(139, 71, 243, 0.07);
+  border: 1px solid rgba(139, 71, 243, 0.13);
+  border-radius: 0 12px 12px 12px;
+}
+
+.chat-bubble-user {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px 0 12px 12px;
+}
+
+/* ── Streak badge pulse ── */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+
+.streak-flame {
+  animation: subtle-pulse 2.6s ease-in-out infinite;
+}
