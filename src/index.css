@@ -1,44 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #060610;
-  --color-sidebar: #08081c;
-  --color-surface: #0b0b20;
-  --color-surface-2: #101030;
-  --color-border: rgba(100, 70, 200, 0.09);
-  --color-border-hi: rgba(139, 71, 243, 0.2);
-  --color-accent: #8b47f3;
-  --color-accent-dim: rgba(139, 71, 243, 0.1);
-  --color-crimson: #cc1144;
-  --color-crimson-dim: rgba(204, 34, 85, 0.1);
-  --color-wine: #8b1040;
-  --color-pink: #cc1144;
-  --color-pink-dim: rgba(204, 34, 85, 0.08);
-  --color-neon: #a855f7;
-  --color-text: #f0ecff;
-  --color-muted: #6868a8;
-  --color-faint: #383868;
-  --color-success: #4dd0a1;
-  --color-warn: #fbbf24;
-  --color-danger: #f87171;
-  --color-xp: #fbbf24;
+  --color-bg: #f5f6fc;
+  --color-sidebar: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-hi: #c084fc;
+  --color-accent: #7c3aed;
+  --color-accent-dim: rgba(124, 58, 237, 0.08);
+  --color-crimson: #e11d48;
+  --color-crimson-dim: rgba(225, 29, 72, 0.08);
+  --color-wine: #9f1239;
+  --color-pink: #db2777;
+  --color-pink-dim: rgba(219, 39, 119, 0.08);
+  --color-cyan: #0284c7;
+  --color-neon: #0284c7;
+  --color-text: #0f172a;
+  --color-muted: #475569;
+  --color-faint: #94a3b8;
+  --color-success: #059669;
+  --color-warn: #d97706;
+  --color-danger: #dc2626;
+  --color-xp: #d97706;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 html,
 body,
 #root {
   height: 100%;
-  background: #060610;
+  background: #f5f6fc;
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  color: #f0ecff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #0f172a;
+  background-color: #f5f6fc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -46,109 +48,134 @@ body {
 /* ── Scrollbars ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 71, 243, 0.1) transparent;
+  scrollbar-color: rgba(124, 58, 237, 0.2) #f1f5f9;
 }
-*::-webkit-scrollbar { width: 4px; height: 4px; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(139, 71, 243, 0.1); border-radius: 2px; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(139, 71, 243, 0.2); }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: #f1f5f9; }
+*::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
 
-/* ── Card base ── */
+/* ── Cartoonist Light Card Base ── */
 .card {
-  background: #0b0b20;
-  border: 1px solid rgba(100, 70, 200, 0.09);
-  border-radius: 10px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 3px 3px 0px #cbd5e1, 0 4px 12px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-hover {
-  transition: border-color 0.15s;
-}
-.card-hover:hover {
-  border-color: rgba(139, 71, 243, 0.2);
+.card:hover {
+  border-color: #c084fc;
+  box-shadow: 4px 4px 0px #a855f7, 0 6px 16px rgba(124, 58, 237, 0.12);
 }
 
-/* ── Input focus ring ── */
+.card-pop {
+  box-shadow: 4px 4px 0px #a855f7, 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+.card-pop:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 6px 0px #7c3aed, 0 10px 20px rgba(124, 58, 237, 0.18);
+}
+
+/* ── Cartoon Badges ── */
+.badge-cartoon {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  padding: 2px 8px;
+  box-shadow: 1.5px 1.5px 0px rgba(15, 23, 42, 0.2);
+}
+
+/* ── Input Focus Ring ── */
 input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: rgba(139, 71, 243, 0.5) !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2) !important;
+  background-color: #ffffff !important;
 }
 
 /* ── Heatmap cell hover ── */
+.heatmap-cell {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
 .heatmap-cell:hover {
-  opacity: 0.8;
-  outline: 1px solid rgba(168, 85, 247, 0.4);
+  transform: scale(1.25);
+  opacity: 1;
+  outline: 2px solid #7c3aed;
   outline-offset: 1px;
+  z-index: 10;
 }
 
-/* ── Atmospheric particles (replaces sakura) ── */
+/* ── Light Floating Cartoon Sparkles ── */
 @keyframes sakura-drift {
   0%   { transform: translateY(-12px) translateX(0) rotate(0deg); opacity: 0; }
-  8%   { opacity: 0.35; }
-  90%  { opacity: 0.06; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.2; }
   100% { transform: translateY(105vh) translateX(var(--petal-drift, 40px)) rotate(var(--petal-spin, 360deg)); opacity: 0; }
 }
 
 .sakura-petal {
   position: fixed;
-  background: rgba(204, 34, 85, 0.28);
+  background: rgba(225, 29, 72, 0.25);
   border-radius: 50%;
   pointer-events: none;
   animation: sakura-drift linear infinite;
   z-index: 1;
+  box-shadow: 0 0 8px rgba(225, 29, 72, 0.3);
 }
 
-/* Alternate violet particles */
 .sakura-petal:nth-child(odd) {
-  background: rgba(139, 71, 243, 0.22);
+  background: rgba(124, 58, 237, 0.25);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+}
+.sakura-petal:nth-child(3n) {
+  background: rgba(2, 132, 199, 0.22);
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.3);
 }
 
-/* ── XP bar gradient ── */
+/* ── XP Energy Bar Fill ── */
 .xp-bar-fill {
-  background: linear-gradient(90deg, #6418c8 0%, #8b47f3 55%, #cc1144 100%);
+  background: linear-gradient(90deg, #7c3aed 0%, #ec4899 50%, #f59e0b 100%);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
 }
 
-/* ── Companion card gradient bg ── */
-.companion-bg {
-  background: radial-gradient(ellipse at 75% 45%, rgba(139, 71, 243, 0.07) 0%, transparent 55%),
-              radial-gradient(ellipse at 28% 82%, rgba(204, 34, 85, 0.05) 0%, transparent 52%),
-              #0b0b20;
-}
-
-/* ── Japanese decorative text ── */
+/* ── Japanese / Comic Watermark ── */
 .jp-watermark {
   font-family: 'JetBrains Mono', monospace;
-  writing-mode: horizontal-tb;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   user-select: none;
   pointer-events: none;
 }
 
-/* ── Logo glow ── */
+/* ── Logo Glow ── */
 .accent-glow {
-  box-shadow: 0 0 10px rgba(139, 71, 243, 0.14);
+  box-shadow: 2px 2px 0px #475569, 0 4px 12px rgba(124, 58, 237, 0.25);
 }
 
-/* ── Chat bubble ── */
+/* ── Cartoon Speech Bubbles (Light Mode) ── */
 .chat-bubble-hana {
-  background: rgba(139, 71, 243, 0.07);
-  border: 1px solid rgba(139, 71, 243, 0.13);
-  border-radius: 0 12px 12px 12px;
+  background: #f3e8ff;
+  border: 2px solid #d8b4fe;
+  border-radius: 0 14px 14px 14px;
+  box-shadow: 2px 2px 0px #c084fc;
 }
 
 .chat-bubble-user {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px 0 12px 12px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px 0 14px 14px;
+  box-shadow: 2px 2px 0px #cbd5e1;
 }
 
-/* ── Streak badge pulse ── */
+/* ── Cartoon Flame Pulse ── */
 @keyframes subtle-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.72; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.05); }
 }
 
 .streak-flame {
-  animation: subtle-pulse 2.6s ease-in-out infinite;
+  animation: subtle-pulse 2s ease-in-out infinite;
 }

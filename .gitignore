@@ -3,6 +3,8 @@ dist/
 build/
 .cache/
 .env*
+!.env.example
+!backend/.env.example
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
@@ -18,3 +20,9 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Backend ignores
+backend/node_modules/
+backend/dist/
+backend/.env
+

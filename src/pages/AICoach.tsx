@@ -2,10 +2,12 @@ import { useState } from 'react';
 import {
   hanaMessages,
   hanaQuickSuggestions,
-  weeklyCoachingInsights,
-  gamification,
-  user,
 } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { useGamification } from '../hooks/useGamification';
+import { useRoadmap } from '../hooks/useRoadmap';
+import { useDailyLogs } from '../hooks/useDailyLogs';
+import { aiApi } from '../services/api';
 import { HanaCharacterSVG, HanaQuote } from '../components/ui/WaifuCompanion';
 import { PlusIcon } from '../components/ui/icons';
 
@@ -28,58 +30,140 @@ const initialMessages: Message[] = hanaMessages.map((m) => ({
 // ── AI Coach Page ─────────────────────────────────────────────────────────────
 
 export default function AICoach() {
+  const { user: authUser } = useAuth();
+  const { data: game, goals } = useGamification();
+  const { roadmap } = useRoadmap();
+  const { logs } = useDailyLogs();
+
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputText, setInputText] = useState('');
   const [hanaTyping, setHanaTyping] = useState(false);
   const [selectedMood, setSelectedMood] = useState<'happy' | 'thinking' | 'excited'>('happy');
+  const [chatError, setChatError] = useState<string | null>(null);
 
-  const hanaReplies: Record<string, string> = {
-    "What should I focus on today?":
-      "Today: 90 minutes on React Context API — you're within reach of completing it. Then 30 minutes reviewing your async JS notes. Hardest concept first, then review. That's the sequence that works for you.",
-    "Give me a study plan for this week":
-      "Mon/Tue: Context API and useReducer, 2h each. Wed: deliberate rest — no cramming. Thu: Custom hooks deep dive, this is your highest-output day, use it. Fri: Build something with what you've learned. Sat: Node.js intro. Sun: review and consolidate. No shortcuts.",
-    "Explain Context API simply":
-      "Context is a broadcast channel. Instead of drilling props through every component in the tree, Context lets any descendant tune in directly. Think radio tower — not telephone chain. The Provider transmits; useContext receives. The mental model is the hard part. The syntax follows naturally once you have that.",
-    "How am I doing overall?":
-      "47 days without breaking — that puts you in the top 3% for consistency. Not talent. Consistency. 284h logged, React up 10% this week. One gap: Error Handling in JS. You've touched it twice this month. That's not enough. Close it this week.",
-    "I'm feeling stuck on async JS":
-      "Expected. Async requires a complete mental model shift, not just syntax memorization. Draw the call stack on paper while running a fetch() call. Physically trace what happens. Promise.all() handles parallel fetches — understand when that's appropriate versus sequential chains. The frustration you feel is the learning happening.",
-    "Challenge me with a concept ⚡":
-      "Explain this without looking it up: why does `const arr = []; arr.push(1)` work even though arr is const? Most developers know the answer. Few can explain the distinction clearly. Const protects the binding — the reference — not the internal structure of what it points to. Elaborate on the implications of that.",
-  };
+  const streak = authUser?.streak ?? 0;
+  const sessionsCount = logs.length;
+  const currentLevel = game?.level ?? (typeof authUser?.level === 'number' ? authUser.level : 1);
+  const levelName = game?.levelName ?? 'Code Initiate';
+  const xp = game?.xp ?? (authUser?.xp ?? 0);
+  const xpToNext = game?.xpToNext ?? 500;
+  const xpPerLevel = game?.xpPerLevel ?? 500;
+  const xpInLevel = game?.xpInLevel ?? (xp % xpPerLevel);
+  const xpPct = Math.min(100, Math.round((xpInLevel / xpPerLevel) * 100));
 
-  function sendMessage(text: string) {
-    if (!text.trim()) return;
+  const activeModule =
+    roadmap?.modules?.find((m) => m.status === 'in-progress')?.name ||
+    authUser?.currentModule ||
+    'HTML & CSS';
+
+  const weeklyTarget = `${goals.weeklyGoal || authUser?.weeklyGoal || 15}.0 hours`;
+
+  const dynamicInsights = [
+    {
+      label: 'Current focus',
+      value: activeModule,
+      note: 'Active roadmap module',
+      color: '#06b6d4',
+      emoji: '🌐',
+    },
+    {
+      label: 'Weekly target',
+      value: weeklyTarget,
+      note: `${(goals.todayGoal || authUser?.todayGoal || 3).toFixed(1)}h / day target`,
+      color: '#a855f7',
+      emoji: '🎯',
+    },
+    {
+      label: 'Level goal',
+      value: `Level ${currentLevel + 1}`,
+      note: `${xpToNext} XP to level up`,
+      color: '#ffb800',
+      emoji: '✨',
+    },
+  ];
+
+  async function sendMessage(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || hanaTyping) return;
+
+    setChatError(null);
 
     const userMsg: Message = {
       id: Date.now(),
       from: 'user',
-      text,
+      text: trimmed,
       time: 'Now',
     };
-    setMessages((prev) => [...prev, userMsg]);
+
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setInputText('');
     setHanaTyping(true);
     setSelectedMood('thinking');
 
-    setTimeout(() => {
-      const reply =
-        hanaReplies[text] ||
-        "Worth exploring. Based on your learning history, break this into smaller units — one concept at a time, each with a concrete example you write yourself. Summarize what you've just learned in your own words. Your comprehension rate is highest when you do that.";
+    // Convert past messages to history format
+    const history = messages.map((m) => ({
+      role: m.from === 'hana' ? ('assistant' as const) : ('user' as const),
+      content: m.text,
+    }));
+
+    try {
+      const res = await aiApi.chat(trimmed, history);
+
+      if (res.success && res.data?.message) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            from: 'hana',
+            text: res.data!.message,
+            time: 'Just now',
+          },
+        ]);
+        setSelectedMood('happy');
+      } else {
+        const errorMsg = res.error?.message || 'Failed to get response';
+        const isNotConfigured = errorMsg.toLowerCase().includes('not configured');
+
+        const fallbackReply = isNotConfigured
+          ? "I'm ready to coach you, but my AI API is not configured yet! Please add `AI_API_KEY` in `backend/.env` to unlock live dynamic coaching with full access to your roadmap and logs."
+          : `I ran into a temporary issue connecting to the AI service (${errorMsg}). Please verify backend server and API key.`;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            from: 'hana',
+            text: fallbackReply,
+            time: 'Just now',
+          },
+        ]);
+        if (!isNotConfigured) {
+          setChatError(errorMsg);
+        }
+      }
+    } catch (err: any) {
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, from: 'hana', text: reply, time: 'Just now' },
+        {
+          id: Date.now() + 1,
+          from: 'hana',
+          text: 'Network error communicating with the backend. Please check your connection.',
+          time: 'Just now',
+        },
       ]);
+      setChatError(err.message || 'Network error');
+    } finally {
       setHanaTyping(false);
-      setSelectedMood('happy');
-    }, 1500);
+    }
   }
 
-  const xpPct = Math.round((gamification.xp / gamification.xpToNext) * 100);
+  const quoteText = `${(authUser?.totalHours ?? 0).toFixed(1)} hours logged, ${
+    authUser?.name ? authUser.name.split(' ')[0] : 'Developer'
+  }. That's compounded skill — not just time served. Keep the streak. Close the gaps.`;
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6">
-
+    <div className="p-6 lg:p-8 w-full space-y-6">
       {/* ── Header ── */}
       <div>
         <div className="flex items-center gap-2.5 mb-1">
@@ -98,8 +182,22 @@ export default function AICoach() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+      {chatError && (
+        <div
+          className="p-3.5 rounded-[8px] text-[13px] flex items-center justify-between"
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
+        >
+          <span>Notice: {chatError}</span>
+          <button
+            onClick={() => setChatError(null)}
+            className="text-[12px] underline hover:text-white cursor-pointer ml-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
         {/* ── Left: Aria profile ── */}
         <div className="flex flex-col gap-4">
           {/* Character card */}
@@ -150,7 +248,7 @@ export default function AICoach() {
                     className="w-2 h-2 rounded-full"
                     style={{ background: '#4dd0a1', boxShadow: '0 0 6px rgba(77,208,161,0.5)' }}
                   />
-                  <span className="text-[10px]" style={{ color: '#38386a' }}>Online</span>
+                  <span className="text-[10px]" style={{ color: '#38386a' }}>Live</span>
                 </div>
               </div>
 
@@ -159,9 +257,9 @@ export default function AICoach() {
                 style={{ borderTop: '1px solid rgba(100,70,200,0.07)' }}
               >
                 {[
-                  { label: 'Coaching Streak', value: `${user.streak}d` },
-                  { label: 'Sessions', value: '127' },
-                  { label: 'Insights', value: '34' },
+                  { label: 'Your Streak', value: `${streak}d` },
+                  { label: 'Sessions', value: `${sessionsCount}` },
+                  { label: 'Level', value: `${currentLevel}` },
                 ].map((s) => (
                   <div key={s.label} className="flex-1 text-center">
                     <p className="text-[15px] font-semibold font-mono" style={{ color: '#8b47f3' }}>
@@ -185,14 +283,14 @@ export default function AICoach() {
                     className="text-[10px] font-bold px-1.5 py-0.5 rounded"
                     style={{ background: 'rgba(139,71,243,0.16)', color: '#8b47f3' }}
                   >
-                    LVL {gamification.level}
+                    LVL {currentLevel}
                   </span>
                   <span className="text-[12px] font-semibold" style={{ color: '#f0ecff' }}>
-                    {gamification.levelName}
+                    {levelName}
                   </span>
                 </div>
                 <p className="text-[11px] mt-0.5" style={{ color: '#38386a' }}>
-                  {gamification.xp.toLocaleString()} / {gamification.xpToNext.toLocaleString()} XP
+                  {xpInLevel} / {xpPerLevel} XP in level
                 </p>
               </div>
             </div>
@@ -200,16 +298,16 @@ export default function AICoach() {
               <div className="h-full rounded-full xp-bar-fill" style={{ width: `${xpPct}%` }} />
             </div>
             <p className="mt-1.5 text-[11px]" style={{ color: '#38386a' }}>
-              {gamification.xpToNext - gamification.xp} XP to Level {gamification.level + 1}
+              {xpToNext} XP to Level {currentLevel + 1}
             </p>
           </div>
 
           {/* Weekly insights */}
           <div className="card p-4 space-y-3">
             <h3 className="text-[13px] font-semibold" style={{ color: '#f0ecff' }}>
-              This Week's Insights
+              This Week's Snapshot
             </h3>
-            {weeklyCoachingInsights.map((insight) => (
+            {dynamicInsights.map((insight) => (
               <div
                 key={insight.label}
                 className="flex items-center gap-3 p-2.5 rounded-[7px]"
@@ -255,7 +353,7 @@ export default function AICoach() {
                     Aria
                   </p>
                   <p className="text-[11px]" style={{ color: hanaTyping ? '#8b47f3' : '#38386a' }}>
-                    {hanaTyping ? 'Processing...' : 'Active now'}
+                    {hanaTyping ? 'Thinking & analyzing...' : 'Online & ready'}
                   </p>
                 </div>
               </div>
@@ -282,13 +380,13 @@ export default function AICoach() {
                   )}
                   <div className={`flex flex-col gap-1 max-w-[78%] ${msg.from === 'user' ? 'items-end' : ''}`}>
                     <div
-                      className={`px-4 py-3 text-[13px] leading-relaxed ${
+                      className={`px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap ${
                         msg.from === 'hana' ? 'chat-bubble-hana' : 'chat-bubble-user'
                       }`}
                     >
-                      <p style={{ color: msg.from === 'hana' ? '#c4c0e0' : '#f0ecff' }}>{msg.text}</p>
+                      <p style={{ color: msg.from === 'hana' ? '#4a154b' : '#0f172a' }}>{msg.text}</p>
                     </div>
-                    <span className="text-[10px]" style={{ color: '#38386a' }}>
+                    <span className="text-[10px]" style={{ color: '#64748b' }}>
                       {msg.time}
                     </span>
                   </div>
@@ -331,7 +429,8 @@ export default function AICoach() {
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage(inputText)}
+                  onKeyDown={(e) => e.key === 'Enter' && !hanaTyping && sendMessage(inputText)}
+                  disabled={hanaTyping}
                   placeholder="Ask Aria anything..."
                   className="flex-1 px-4 py-2.5 rounded-[8px] text-[13.5px] transition-colors"
                   style={{
@@ -343,7 +442,7 @@ export default function AICoach() {
                 <button
                   onClick={() => sendMessage(inputText)}
                   disabled={!inputText.trim() || hanaTyping}
-                  className="px-4 py-2.5 rounded-[8px] text-[13px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="px-4 py-2.5 rounded-[8px] text-[13px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer"
                   style={{ background: '#8b47f3', color: 'white' }}
                 >
                   <PlusIcon size={15} />
@@ -363,7 +462,7 @@ export default function AICoach() {
                   key={s}
                   onClick={() => sendMessage(s)}
                   disabled={hanaTyping}
-                  className="px-3 py-1.5 rounded-[6px] text-[12.5px] font-medium transition-all hover:opacity-80 disabled:opacity-40"
+                  className="px-3 py-1.5 rounded-[6px] text-[12.5px] font-medium transition-all hover:opacity-80 disabled:opacity-40 cursor-pointer"
                   style={{
                     background: 'rgba(139,71,243,0.06)',
                     color: '#c0bcdc',
@@ -378,7 +477,7 @@ export default function AICoach() {
 
           {/* Coaching quote */}
           <HanaQuote
-            text={`284 hours, ${user.name}. That's compounded skill — not just time served. Keep the streak. Close the gaps.`}
+            text={quoteText}
             subtitle="Aria · Learning Architect"
           />
         </div>

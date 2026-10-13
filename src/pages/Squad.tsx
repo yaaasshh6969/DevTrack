@@ -185,7 +185,7 @@ export default function Squad() {
     .reduce((s, e) => s + (e.hours ?? 0), 0);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1100px] mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 w-full">
 
       {/* Header */}
       <div className="mb-6">
